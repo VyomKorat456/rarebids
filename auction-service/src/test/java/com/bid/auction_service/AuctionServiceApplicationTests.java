@@ -13,7 +13,7 @@ class AuctionServiceApplicationTests {
 	private JwtDecoder jwtDecoder;
 
 	@Test
-	void contextLoads() {
+	void    contextLoads() {
 	}
 
 }
