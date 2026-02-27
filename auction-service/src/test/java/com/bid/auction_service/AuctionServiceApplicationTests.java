@@ -6,6 +6,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 @SpringBootTest
+@org.springframework.test.context.ActiveProfiles("test")
 class AuctionServiceApplicationTests {
 
 	@MockitoBean
