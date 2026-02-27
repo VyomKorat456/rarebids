@@ -1,0 +1,425 @@
+{
+    "info": {
+        "_postman_id": "8a3b5c7d-2e1f-4a9b-8c7d-6e5f4d3c2b1a",
+        "name": "Bid System API Collection",
+        "description": "Comprehensive collection for testing all microservices in the Bid System via API Gateway.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth Service",
+            "item": [
+                {
+                    "name": "Register User",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"testuser\",\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\",\n    \"firstName\": \"Test\",\n    \"lastName\": \"User\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth-service/auth/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth-service",
+                                "auth",
+                                "register"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Refresh Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"refresh_token\": \"your_refresh_token_here\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth-service/auth/refresh",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth-service",
+                                "auth",
+                                "refresh"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Current User (Me)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth-service/auth/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth-service",
+                                "auth",
+                                "me"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth-service/auth/users?page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth-service",
+                                "auth",
+                                "users"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Auction Service",
+            "item": [
+                {
+                    "name": "Get All OPEN Auctions",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/auction-service/auctions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction-service",
+                                "auctions"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Auction",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "Vintage Watch",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "A beautiful vintage watch in great condition.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "startPrice",
+                                    "value": "100.0",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "buyNowPrice",
+                                    "value": "500.0",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "categoryId",
+                                    "value": "1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "itemCondition",
+                                    "value": "USED",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "shippingInfo",
+                                    "value": "Paid",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "tags",
+                                    "value": "watch,vintage,collectible",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "endTime",
+                                    "value": "2026-12-31T23:59:59.000Z",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "image",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auction-service/auctions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction-service",
+                                "auctions"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Join Auction",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/auction-service/auctions/1/join?userId=123",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction-service",
+                                "auctions",
+                                "1",
+                                "join"
+                            ],
+                            "query": [
+                                {
+                                    "key": "userId",
+                                    "value": "123"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/auction-service/categories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction-service",
+                                "categories"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Payment Order",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"auctionId\": 1,\n    \"userId\": 123,\n    \"amount\": 150.0\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auction-service/payment/create-order",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auction-service",
+                                "payment",
+                                "create-order"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Bidding Service",
+            "item": [
+                {
+                    "name": "Place Bid",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/bidding-service/bids?auctionId=1&amount=160.0",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "bidding-service",
+                                "bids"
+                            ],
+                            "query": [
+                                {
+                                    "key": "auctionId",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "amount",
+                                    "value": "160.0"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get My Bids",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/bidding-service/bids/my-bids",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "bidding-service",
+                                "bids",
+                                "my-bids"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Auction Snapshot",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/bidding-service/bidding/snapshot/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "bidding-service",
+                                "bidding",
+                                "snapshot",
+                                "1"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Admin Service",
+            "item": [
+                {
+                    "name": "Get Audit Logs",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin-service/admin/audit-logs",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin-service",
+                                "admin",
+                                "audit-logs"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "accessToken",
+            "value": "your_token_here",
+            "type": "string"
+        }
+    ]
+}

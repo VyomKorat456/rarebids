@@ -1,0 +1,12 @@
+{
+    "clientId": "bid-app-client",
+    "enabled": true,
+    "publicClient": true,
+    "directAccessGrantsEnabled": true,
+    "webOrigins": [
+        "*"
+    ],
+    "redirectUris": [
+        "*"
+    ]
+}

@@ -1,0 +1,63 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false
+              lower-case-service-id: true
+          routes:
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/auth-service/**
+              filters:
+                - StripPrefix=1
+            - id: auction-ws
+              uri: lb:ws://auction-service
+              predicates:
+                - Path=/auction-service/ws/**
+              filters:
+                - StripPrefix=1
+            - id: auction-service
+              uri: lb://auction-service
+              predicates:
+                - Path=/auction-service/**
+              filters:
+                - StripPrefix=1
+            - id: bidding-service
+              uri: lb://auction-service
+              predicates:
+                - Path=/bidding-service/**
+              filters:
+                - StripPrefix=1
+            - id: websocket-service
+              uri: lb://auction-service
+              predicates:
+                - Path=/websocket-service/**
+              filters:
+                - StripPrefix=1
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/bid-realm}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/bid-realm/protocol/openid-connect/certs}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+# Logging for debugging
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG

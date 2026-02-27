@@ -1,0 +1,28 @@
+server:
+  port: 8081
+  error:
+    include-message: always
+    include-stacktrace: always
+
+spring:
+  application:
+     name: auth-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/bid-realm}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/bid-realm/protocol/openid-connect/certs}
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    hostname: ${EUREKA_HOSTNAME:localhost}
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
