@@ -1,7 +1,7 @@
 package com.bid.auth_service;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 @SpringBootTest(properties = {
@@ -10,7 +10,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 })
 class AuthServiceApplicationTests {
 
-	@MockBean
+	@MockitoBean
 	private JwtDecoder jwtDecoder;
 
 	@Test
