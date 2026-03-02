@@ -26,7 +26,7 @@ const Register = () => {
         setError('');
 
         try {
-            await axios.post('http://localhost:8080/auth-service/auth/register', formData);
+            await axios.post(`${import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080'}/auth-service/auth/register`, formData);
             alert('Registration Successful! Please login.');
             navigate('/login');
         } catch (err) {

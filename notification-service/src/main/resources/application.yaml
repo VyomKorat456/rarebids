@@ -4,6 +4,7 @@ server:
 spring:
   application:
     name: notification-service
+  security:
     oauth2:
       resourceserver:
         jwt:

@@ -319,7 +319,7 @@ const AuctionDetailModal = ({ show, onHide, auction, onAction, onUpdate, onReope
                     <Row>
                         <Col md={5}>
                             <img
-                                src={`http://localhost:8080/auction-service${auction.imageUrl}`}
+                                src={`${import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080'}/auction-service${auction.imageUrl}`}
                                 alt={auction.title}
                                 className="img-fluid rounded shadow-sm mb-3"
                             />

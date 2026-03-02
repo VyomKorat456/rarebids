@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  # --- INFRASTRUCTURE ---
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-prod
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: auction_db,auth_db,notification_db,keycloak_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kysz}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bid-network
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.0
+    container_name: keycloak-prod
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: ${DB_PASSWORD:-kysz}
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      KC_PROXY: edge
+    command: start-dev
+    ports:
+      - "8180:8080"
+    depends_on:
+      - postgres
+    networks:
+      - bid-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: redis-prod
+    networks:
+      - bid-network
+    restart: unless-stopped
+
+  # --- MICROSERVICES ---
+  eureka-server:
+    image: vyomkorat/bid-system-eureka-server:latest
+    container_name: eureka-server-prod
+    ports:
+      - "8761:8761"
+    networks:
+      - bid-network
+
+  auth-service:
+    image: vyomkorat/bid-system-auth-service:latest
+    container_name: auth-service-prod
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka/
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/bid-realm
+    depends_on:
+      - eureka-server
+      - keycloak
+    networks:
+      - bid-network
+
+  auction-service:
+    image: vyomkorat/bid-system-auction-service:latest
+    container_name: auction-service-prod
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auction_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-kysz}
+      REDIS_HOST: redis
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/bid-realm
+      UPLOAD_DIR: /app/uploads/images
+    volumes:
+      - auction_uploads:/app/uploads/images
+    depends_on:
+      - postgres
+      - redis
+      - eureka-server
+    networks:
+      - bid-network
+
+  notification-service:
+    image: vyomkorat/bid-system-notification-service:latest
+    container_name: notification-service-prod
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka/
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/bid-realm
+    depends_on:
+      - eureka-server
+    networks:
+      - bid-network
+
+  api-gateway:
+    image: vyomkorat/bid-system-api-gateway:latest
+    container_name: api-gateway-prod
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka/
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/bid-realm
+    depends_on:
+      - eureka-server
+    networks:
+      - bid-network
+
+  frontend:
+    image: vyomkorat/bid-system-frontend:latest
+    container_name: frontend-prod
+    ports:
+      - "80:80"
+    environment:
+      VITE_API_GATEWAY_URL: ${LIVE_GATEWAY_URL:-http://localhost:8080}
+      VITE_KEYCLOAK_URL: ${LIVE_KEYCLOAK_URL:-http://localhost:8180}
+    networks:
+      - bid-network
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle-prod
+    environment:
+      DOZZLE_USERNAME: admin
+      DOZZLE_PASSWORD: ${DOZZLE_PASSWORD:-admin}
+    ports:
+      - "9999:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - bid-network
+
+networks:
+  bid-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  auction_uploads:

@@ -178,7 +178,7 @@ const AuctionItemCard = ({ auction }) => {
         >
             <div className="position-relative" style={{ height: '220px' }}>
                 <img
-                    src={`http://localhost:8080/auction-service${auction.imageUrl}`}
+                    src={`${import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080'}/auction-service${auction.imageUrl}`}
                     alt={auction.title}
                     className="w-100 h-100"
                     style={{ objectFit: 'cover' }}

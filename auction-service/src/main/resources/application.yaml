@@ -32,6 +32,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
 
 eureka:
   client:
@@ -44,4 +47,4 @@ eureka:
 
 app:
   upload:
-    dir: C:/Users/dell/Downloads/bid-system/uploads/images
+    dir: ${UPLOAD_DIR:/app/uploads/images}

@@ -12,7 +12,7 @@ const AuditLogTable = () => {
     const fetchLogs = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:8080/admin-service/admin/audit-logs', {
+            const response = await axios.get(`${import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080'}/admin-service/admin/audit-logs`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setLogs(response.data);

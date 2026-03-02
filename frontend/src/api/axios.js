@@ -1,9 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-    // Using relative path to leverage Vite proxy if needed, or direct URL
     // Pointing to API Gateway root
-    baseURL: 'http://127.0.0.1:8080'
+    baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080'
 });
 
 // Request Interceptor: Attach Token
@@ -36,7 +35,7 @@ api.interceptors.response.use(
 
                 // Call Backend to refresh (Direct to Auth Service)
                 const response = await axios.post(
-                    'http://localhost:8081/auth/refresh',
+                    `${import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8081'}/auth/refresh`,
                     { refresh_token: refreshToken },
                     { headers: { 'Content-Type': 'application/json' } }
                 );

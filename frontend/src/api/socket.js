@@ -11,7 +11,7 @@ export const connectWebSocket = (auctionId, onMessageReceived, onConnected) => {
     }
 
     const token = localStorage.getItem('token');
-    const socket = new SockJS(`http://127.0.0.1:8080/auction-service/ws`);
+    const socket = new SockJS(`${import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080'}/auction-service/ws`);
     stompClient = Stomp.over(socket);
 
     stompClient.connect({ Authorization: `Bearer ${token}` }, (frame) => {

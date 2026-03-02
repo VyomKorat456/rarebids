@@ -24,7 +24,7 @@ const Login = () => {
 
         try {
             const response = await axios.post(
-                'http://localhost:8180/realms/bid-realm/protocol/openid-connect/token',
+                `${import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8180'}/realms/bid-realm/protocol/openid-connect/token`,
                 params,
                 {
                     headers: {
