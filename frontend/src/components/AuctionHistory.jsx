@@ -68,7 +68,7 @@ const AuctionHistory = () => {
                                             style={{
                                                 width: '100%',
                                                 height: '100%',
-                                                backgroundImage: `url(${import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080'}/auction-service${auction.imageUrl})`,
+                                                backgroundImage: `url(${import.meta.env.PROD ? '/api' : (import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080')}/auction-service${auction.imageUrl})`,
                                                 backgroundSize: 'cover',
                                                 backgroundPosition: 'center'
                                             }}

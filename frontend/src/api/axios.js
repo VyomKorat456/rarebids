@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-    // Pointing to API Gateway root
-    baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080'
+    // Pointing to API Gateway via Nginx proxy
+    baseURL: import.meta.env.PROD ? '/api' : (import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080')
 });
 
 // Request Interceptor: Attach Token

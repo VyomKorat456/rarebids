@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Form, Button, Container, Card, Alert } from 'react-bootstrap';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import api from '../api/axios';
 
 const Register = () => {
+    // ... rest of state stays same
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -26,7 +26,7 @@ const Register = () => {
         setError('');
 
         try {
-            await axios.post(`${import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080'}/auth-service/auth/register`, formData);
+            await api.post('/auth-service/auth/register', formData);
             alert('Registration Successful! Please login.');
             navigate('/login');
         } catch (err) {

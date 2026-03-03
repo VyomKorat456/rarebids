@@ -198,7 +198,7 @@ const AuctionCard = ({ auction, onClick }) => {
             style={{ cursor: 'pointer' }}
         >
             <div style={{ height: '200px', position: 'relative' }}>
-                <div style={{ width: '100%', height: '100%', backgroundImage: `url(http://localhost:8080/auction-service${auction.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                <div style={{ width: '100%', height: '100%', backgroundImage: `url(${import.meta.env.PROD ? '/api' : (import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080')}/auction-service${auction.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                 <div className="position-absolute top-0 end-0 m-3">
                     <StatusBadge status={auction.status} />
                 </div>
@@ -319,7 +319,7 @@ const AuctionDetailModal = ({ show, onHide, auction, onAction, onUpdate, onReope
                     <Row>
                         <Col md={5}>
                             <img
-                                src={`${import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080'}/auction-service${auction.imageUrl}`}
+                                src={`${import.meta.env.PROD ? '/api' : (import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080')}/auction-service${auction.imageUrl}`}
                                 alt={auction.title}
                                 className="img-fluid rounded shadow-sm mb-3"
                             />

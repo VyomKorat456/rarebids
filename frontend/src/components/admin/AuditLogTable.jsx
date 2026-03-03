@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const AuditLogTable = () => {
     const [logs, setLogs] = useState([]);
@@ -12,9 +12,7 @@ const AuditLogTable = () => {
     const fetchLogs = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080'}/admin-service/admin/audit-logs`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get('/admin-service/admin/audit-logs');
             setLogs(response.data);
         } catch (error) {
             console.error("Failed to fetch audit logs", error);

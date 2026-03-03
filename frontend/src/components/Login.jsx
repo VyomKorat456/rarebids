@@ -23,8 +23,9 @@ const Login = () => {
         params.append('password', password);
 
         try {
+            const authURL = import.meta.env.PROD ? '/auth' : (import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8180');
             const response = await axios.post(
-                `${import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8180'}/realms/bid-realm/protocol/openid-connect/token`,
+                `${authURL}/realms/bid-realm/protocol/openid-connect/token`,
                 params,
                 {
                     headers: {
