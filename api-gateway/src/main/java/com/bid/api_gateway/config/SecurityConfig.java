@@ -21,7 +21,7 @@ import java.util.List;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
+    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri:http://localhost:8180/realms/bid-realm/protocol/openid-connect/certs}")
     private String jwkSetUri;
 
     @Bean
