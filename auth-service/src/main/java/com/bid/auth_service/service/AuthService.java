@@ -51,12 +51,17 @@ public class AuthService {
         user.setCredentials(Collections.singletonList(credential));
 
         UsersResource usersResource = keycloak.realm(realm).users();
+        System.out.println(">>> KEYCLOAK CREATE USER START: " + request.getUsername() + " | Email: " + request.getEmail());
         Response response = usersResource.create(user);
+        System.out.println(">>> KEYCLOAK CREATE USER STATUS: " + response.getStatus());
 
         if (response.getStatus() != 201) {
-            String errorMessage = "Failed to create user. Status: " + response.getStatus();
+            String errorMsg = response.readEntity(String.class);
+            System.err.println(">>> KEYCLOAK ERROR BODY: " + errorMsg);
+            String errorMessage = "Failed to create user. Status: " + response.getStatus() + " | Error: " + errorMsg;
             throw new RuntimeException(errorMessage);
         }
+        System.out.println(">>> KEYCLOAK CREATE USER SUCCESS!");
     }
 
     public TokenResponse login(LoginRequest request) {

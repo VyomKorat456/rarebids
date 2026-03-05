@@ -12,14 +12,17 @@ services:
       KC_DB_PASSWORD: ${RDS_PASSWORD}
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
-      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      KC_HOSTNAME: 13.53.133.191
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY: edge
-    command: start-dev
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
+    command: start-dev --hostname 13.53.133.191 --proxy-headers x-forwarded
     ports:
       - "8180:8080"
     networks:
       - bid-network
-    restart: unless-stopped
+    restart: always
 
   redis:
     image: redis:alpine
@@ -38,16 +41,23 @@ services:
       - bid-network
 
   auth-service:
+    build: ./auth-service
     image: vyomkorat/bid-system-auth-service:latest
     container_name: auth-service-prod
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka/
-      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/bid-realm
+      KEYCLOAK_SERVER_URL: http://keycloak-prod:8080/auth
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak-prod:8080/auth
+      KEYCLOAK_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
+      KEYCLOAK_ADMIN_USERNAME: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
     depends_on:
       - eureka-server
       - keycloak
     networks:
       - bid-network
+    restart: always
 
   auction-service:
     image: vyomkorat/bid-system-auction-service:latest
@@ -57,22 +67,28 @@ services:
       SPRING_DATASOURCE_USERNAME: ${RDS_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${RDS_PASSWORD}
       REDIS_HOST: redis
-      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/bid-realm
+      KEYCLOAK_SERVER_URL: http://keycloak-prod:8080/auth
+      KEYCLOAK_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
       UPLOAD_DIR: /app/uploads/images
     volumes:
       - auction_uploads:/app/uploads/images
     depends_on:
       - redis
       - eureka-server
+      - keycloak
     networks:
       - bid-network
+    restart: always
 
   notification-service:
     image: vyomkorat/bid-system-notification-service:latest
     container_name: notification-service-prod
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka/
-      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/bid-realm
+      KEYCLOAK_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak-prod:8080/auth/realms/bid-realm/protocol/openid-connect/certs
     depends_on:
       - eureka-server
     networks:
@@ -85,13 +101,16 @@ services:
       - "8080:8080"
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka/
-      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/bid-realm
+      KEYCLOAK_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak-prod:8080/auth/realms/bid-realm/protocol/openid-connect/certs
     depends_on:
       - eureka-server
     networks:
       - bid-network
 
   frontend:
+    build: ./frontend
     image: vyomkorat/bid-system-frontend:latest
     container_name: frontend-prod
     ports:
@@ -102,7 +121,6 @@ services:
     #   VITE_KEYCLOAK_URL: ${LIVE_KEYCLOAK_URL:-http://localhost:8180}
     networks:
       - bid-network
-
 
 networks:
   bid-network:

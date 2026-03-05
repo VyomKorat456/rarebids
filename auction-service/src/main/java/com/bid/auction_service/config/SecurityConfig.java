@@ -11,7 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtDecoders;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,12 +26,13 @@ import java.util.stream.Collectors;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private String issuerUri;
+    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
+    private String jwkSetUri;
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return JwtDecoders.fromIssuerLocation(issuerUri);
+        return NimbusJwtDecoder.withJwkSetUri(jwkSetUri)
+                .build();
     }
 
     @Bean
@@ -80,6 +81,10 @@ public class SecurityConfig {
 
             Collection<String> roles = (Collection<String>) realmAccess.get("roles");
             System.out.println("DEBUG: Keycloak Roles: " + roles);
+
+            if (roles == null) {
+                return List.of();
+            }
 
             return roles.stream()
                     .map(roleName -> new SimpleGrantedAuthority("ROLE_" + roleName.toUpperCase()))

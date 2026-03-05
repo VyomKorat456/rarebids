@@ -8,6 +8,11 @@ const api = axios.create({
 // Request Interceptor: Attach Token
 api.interceptors.request.use(
     (config) => {
+        // DO NOT attach token for registration or login paths
+        if (config.url.includes('/register') || config.url.includes('/login')) {
+            return config;
+        }
+
         const token = localStorage.getItem('token');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
@@ -25,6 +30,10 @@ api.interceptors.response.use(
 
         // If 401 and not already retrying
         if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+            // DO NOT redirect if we are on the registration page or calling register
+            if (originalRequest.url.includes('/register')) {
+                return Promise.reject(error);
+            }
             originalRequest._retry = true;
 
             try {

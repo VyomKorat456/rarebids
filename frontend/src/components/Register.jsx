@@ -32,7 +32,10 @@ const Register = () => {
             navigate('/login');
         } catch (err) {
             console.error(err);
-            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+            const serverMessage = typeof err.response?.data === 'string' 
+                ? err.response.data 
+                : err.response?.data?.message;
+            setError(serverMessage || 'Registration failed. Please try again.');
         }
     };
 
