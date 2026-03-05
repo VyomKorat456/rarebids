@@ -31,6 +31,15 @@ public class AuctionController {
     private final CachedUserService cachedUserService;
     private final AuctionRepository auctionRepository;
 
+    @GetMapping("/debug/info")
+    public ResponseEntity<java.util.Map<String, String>> getDebugInfo() {
+        java.util.Map<String, String> info = new java.util.HashMap<>();
+        info.put("version", "1.0.1-REFIX");
+        info.put("status", "UP");
+        info.put("timestamp", LocalDateTime.now().toString());
+        return ResponseEntity.ok(info);
+    }
+
     @Value("${app.upload.dir:/app/uploads/images}")
     private String uploadDir;
 
