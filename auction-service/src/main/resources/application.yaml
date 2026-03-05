@@ -15,11 +15,12 @@ spring:
            default:
             connectTimeout: 60000
             readTimeout: 60000
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/bid-realm}
-          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/bid-realm/protocol/openid-connect/certs}
+    security:
+      oauth2:
+        resourceserver:
+          jwt:
+            issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/bid-realm}
+            jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/bid-realm/protocol/openid-connect/certs}
   servlet:
     multipart:
       max-file-size: 10MB
