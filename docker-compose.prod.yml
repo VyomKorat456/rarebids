@@ -49,10 +49,11 @@ services:
     environment:
       JAVA_OPTS: "-Xmx256m"
       EUREKA_URL: http://eureka-server:8761/eureka/
-      KEYCLOAK_SERVER_URL: http://keycloak-prod:8080/auth
-      KEYCLOAK_AUTH_SERVER_URL: http://keycloak-prod:8080/auth
-      KEYCLOAK_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
+      KEYCLOAK_SERVER_URL: http://keycloak:8080/auth
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080/auth
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/bid-realm/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_USERNAME: admin
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
     depends_on:
@@ -72,10 +73,10 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${RDS_PASSWORD}
       EUREKA_URL: http://eureka-server:8761/eureka/
       REDIS_HOST: redis
-      KEYCLOAK_SERVER_URL: http://keycloak-prod:8080/auth
-      KEYCLOAK_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak-prod:8080/auth/realms/bid-realm/protocol/openid-connect/certs
+      KEYCLOAK_SERVER_URL: http://keycloak:8080/auth
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/bid-realm/protocol/openid-connect/certs
       UPLOAD_DIR: /app/uploads/images
     volumes:
       - auction_uploads:/app/uploads/images
