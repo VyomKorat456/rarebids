@@ -1,0 +1,93 @@
+ # CI/CD Architecture & Pipeline Overview
+
+This document provides a deep dive into how the Continuous Integration and Continuous Deployment (CI/CD) system is structured for the **RareBids** (bid-system) project.
+
+## 🛠️ Tools & Technologies
+
+| Category | Tool | Purpose |
+| :--- | :--- | :--- |
+| **Orchestration** | [GitHub Actions](https://github.com/features/actions) | Automates the build, test, and deployment workflows. |
+| **Backend Build** | Java 17, Maven (`mvnw`) | Compiles and tests the Spring Boot microservices. |
+| **Frontend Build** | Node.js 20, NPM, Vite | Builds the React frontend application. |
+| **Containerization** | [Docker](https://www.docker.com/) | Packages each service into a portable container. |
+| **Image Registry** | [Docker Hub](https://hub.docker.com/) | Stores and manages Docker images for use during deployment. |
+| **Infrastructure** | [AWS EC2](https://aws.amazon.com/ec2/) | Virtual server hosting the production environment. |
+| **Database** | [AWS RDS (PostgreSQL)](https://aws.amazon.com/rds/) | Managed database service for microservices and Keycloak. |
+| **Networking** | Docker Bridge Network | Enables secure communication between services. |
+| **Discovery** | Netflix Eureka Server | Service registration and discovery for microservices. |
+| **Security** | Keycloak | Centralized OIDC/OAuth2 authentication and authorization. |
+
+---
+
+## 🚀 The CI/CD Pipeline Flow
+
+The project uses two primary GitHub Actions workflows located in `.github/workflows/`.
+
+### 1. Development & Quality Assurance (`dev-ci.yml`)
+*   **Trigger**: Triggered on Pull Requests to `main` or `develop`, and pushes to `feature/**` branches.
+*   **Goal**: Ensure code quality and stability before merging.
+*   **Steps**:
+    *   **Matrix Build**: Simultaneously runs builds for all microservices.
+    *   **Unit Testing**: Runs Maven tests specifically for code logic.
+    *   **Frontend Check**: Installs dependencies and performs a production build of the React app to catch build-time errors.
+
+### 2. Production Deployment (`prod-ci.yml`)
+*   **Trigger**: Triggered only on direct pushes or merges to the `main` branch.
+*   **Goal**: Zero-downtime (or near-zero) deployment to the production server.
+*   **Steps**:
+    1.  **Build & Test**: Compiles all Java services and runs the full test suite.
+    2.  **Docker Build & Push**:
+        *   Creates Docker images tagged with `:latest`.
+        *   Authenticates with Docker Hub using repository secrets.
+        *   Pushes images to `vyomkorat/bid-system-<service-name>`.
+    3.  **Remote Deployment**:
+        *   **SCP Transfer**: Uploads the `docker-compose.prod.yml` file to the EC2 instance at `/home/ubuntu/`.
+        *   **SSH Orchestration**:
+            *   Logs into the EC2 instance.
+            *   Runs `docker compose pull` to fetch the latest images from Docker Hub.
+            *   Runs `docker compose up -d` to recreate containers with updated code.
+            *   Performs `docker image prune` to clean up old, unused images and save disk space.
+
+---
+
+## 🏗️ Production Infrastructure Layout
+
+The production environment is orchestrated via `docker-compose.prod.yml`, which differs from the local setup in several key ways:
+
+### Externalized Data Layer
+*   **AWS RDS**: Instead of a local PostgreSQL container, the production services connect to a managed AWS RDS instance.
+*   **Persistence**: AWS RDS handles backups, high availability, and scaling, while the services focus on business logic.
+
+### Scalable Microservices
+*   **Statelessness**: Microservices are designed to be stateless wherever possible.
+*   **Eureka Server**: Acts as the "phonebook" for the system, allowing services to find each other dynamically.
+*   **Keycloak**: Hosted as a container but pointed to the RDS database for persisting users, realms, and roles.
+
+### Environment Management
+The system relies on **GitHub Secrets** to keep sensitive data out of the source code:
+*   `EC2_HOST`, `EC2_USERNAME`, `EC2_SSH_KEY`: For server access.
+*   `DOCKER_USERNAME`, `DOCKER_PASSWORD`: For registry access.
+*   `RDS_HOSTNAME`, `RDS_USERNAME`, `RDS_PASSWORD`: For database connectivity.
+
+---
+
+## 🔄 Summary Diagram
+
+```mermaid
+graph TD
+    A[Developer Push to main] --> B(GitHub Actions)
+    B --> C{Prod-CI Workflow}
+    C --> D[Build & Test Java Services]
+    D --> E[Build & Push Docker Images]
+    E --> F[Copy docker-compose.prod.yml to EC2]
+    F --> G[SSH: Docker Compose Pull & Up]
+    G --> H[Production Server Live]
+    
+    subgraph "AWS Ecosystem"
+    H --- I[(AWS RDS PostgreSQL)]
+    end
+    
+    subgraph "Docker Hub"
+    E --- J[Registry]
+    end
+```

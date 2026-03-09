@@ -12,12 +12,12 @@ services:
       KC_DB_PASSWORD: ${RDS_PASSWORD}
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
-      KC_HOSTNAME: 13.53.133.191
+      KC_HOSTNAME: 51.21.181.153
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY: edge
       KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
-    command: start-dev --hostname 13.53.133.191 --proxy-headers x-forwarded
+    command: start-dev --hostname 51.21.181.153 --proxy-headers x-forwarded
     ports:
       - "8180:8080"
     networks:
@@ -35,16 +35,19 @@ services:
   eureka-server:
     image: vyomkorat/bid-system-eureka-server:latest
     container_name: eureka-server-prod
+    # JVM Optimization: Limit memory for Eureka
+    environment:
+      JAVA_OPTS: "-Xmx128m"
     ports:
       - "8761:8761"
     networks:
       - bid-network
 
   auth-service:
-    build: ./auth-service
     image: vyomkorat/bid-system-auth-service:latest
     container_name: auth-service-prod
     environment:
+      JAVA_OPTS: "-Xmx256m"
       EUREKA_URL: http://eureka-server:8761/eureka/
       KEYCLOAK_SERVER_URL: http://keycloak-prod:8080/auth
       KEYCLOAK_AUTH_SERVER_URL: http://keycloak-prod:8080/auth
@@ -63,6 +66,7 @@ services:
     image: vyomkorat/bid-system-auction-service:latest
     container_name: auction-service-prod
     environment:
+      JAVA_OPTS: "-Xmx384m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://${RDS_HOSTNAME}:${RDS_PORT:-5432}/${RDS_AUCTION_DB:-auction_db}
       SPRING_DATASOURCE_USERNAME: ${RDS_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${RDS_PASSWORD}
@@ -86,6 +90,7 @@ services:
     image: vyomkorat/bid-system-notification-service:latest
     container_name: notification-service-prod
     environment:
+      JAVA_OPTS: "-Xmx128m"
       EUREKA_URL: http://eureka-server:8761/eureka/
       KEYCLOAK_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
@@ -101,6 +106,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      JAVA_OPTS: "-Xmx256m"
       EUREKA_URL: http://eureka-server:8761/eureka/
       KEYCLOAK_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
@@ -111,15 +117,10 @@ services:
       - bid-network
 
   frontend:
-    build: ./frontend
     image: vyomkorat/bid-system-frontend:latest
     container_name: frontend-prod
     ports:
       - "80:80"
-    # Environment variables are no longer needed as Nginx handles proxying
-    # environment:
-    #   VITE_API_GATEWAY_URL: ${LIVE_GATEWAY_URL:-http://localhost:8080}
-    #   VITE_KEYCLOAK_URL: ${LIVE_KEYCLOAK_URL:-http://localhost:8180}
     networks:
       - bid-network
 
