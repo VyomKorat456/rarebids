@@ -94,9 +94,9 @@ services:
     environment:
       JAVA_OPTS: "-Xmx128m"
       EUREKA_URL: http://eureka-server:8761/eureka/
-      KEYCLOAK_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak-prod:8080/auth/realms/bid-realm/protocol/openid-connect/certs
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/bid-realm/protocol/openid-connect/certs
     depends_on:
       - eureka-server
     networks:
@@ -110,9 +110,9 @@ services:
     environment:
       JAVA_OPTS: "-Xmx256m"
       EUREKA_URL: http://eureka-server:8761/eureka/
-      KEYCLOAK_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak-prod:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak-prod:8080/auth/realms/bid-realm/protocol/openid-connect/certs
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/bid-realm/protocol/openid-connect/certs
     depends_on:
       - eureka-server
     networks:

@@ -89,10 +89,11 @@ class AuthServiceTest {
         when(realmResource.users()).thenReturn(usersResource);
         Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(400);
+        when(response.readEntity(String.class)).thenReturn("error-detail");
         when(usersResource.create(any(UserRepresentation.class))).thenReturn(response);
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> authService.registerUser(request));
-        assertTrue(exception.getMessage().contains("Failed to create user. Status: 400"));
+        assertTrue(exception.getMessage().contains("Keycloak user creation failed: 400 error-detail"));
     }
 
     @Test
