@@ -17,7 +17,7 @@ services:
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY: edge
       KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
-    command: start-dev --hostname 51.21.181.153 --proxy-headers x-forwarded
+    command: start-dev --hostname 51.21.181.153 --proxy-headers xforwarded
     ports:
       - "8180:8080"
     networks:
