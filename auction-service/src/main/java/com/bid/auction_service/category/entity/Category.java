@@ -1,9 +1,14 @@
 package com.bid.auction_service.category.entity;
 
 import jakarta.persistence.*;
+import com.bid.auction_service.category.enums.CategoryStatus;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "categories")
+@Getter
+@Setter
 public class Category {
 
     public Category() {}
@@ -22,27 +27,9 @@ public class Category {
 
     private String description;
 
-    public Long getId() {
-        return id;
-    }
+    @Enumerated(EnumType.STRING)
+    private CategoryStatus status = CategoryStatus.PENDING;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    private String requestedBy; // userId from JWT
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 }

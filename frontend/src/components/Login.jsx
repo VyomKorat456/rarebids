@@ -16,25 +16,20 @@ const Login = () => {
         setError('');
         setLoading(true);
 
-        const params = new URLSearchParams();
-        params.append('grant_type', 'password');
-        params.append('client_id', 'bid-app-client');
-        params.append('username', username);
-        params.append('password', password);
-
         try {
-            const authURL = import.meta.env.PROD ? '/auth' : (import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8180');
+            // Using the centralized axios instance for consistent baseURL and interceptors
+            const apiURL = import.meta.env.PROD ? '/api' : (import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080');
             const response = await axios.post(
-                `${authURL}/realms/bid-realm/protocol/openid-connect/token`,
-                params,
+                `${apiURL}/auth-service/auth/login`,
+                { username, password },
                 {
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
+                        'Content-Type': 'application/json'
                     }
                 }
             );
 
-            console.log("LOGIN RESPONSE (Check expires_in):", response.data);
+            console.log("LOGIN RESPONSE:", response.data);
             const { access_token, refresh_token } = response.data;
             localStorage.setItem('token', access_token);
             if (refresh_token) {
@@ -43,12 +38,10 @@ const Login = () => {
 
             try {
                 const decoded = jwtDecode(access_token);
-                // Store userId for other components
-                const userId = decoded.sub;
-                localStorage.setItem('userId', userId);
+                localStorage.setItem('userId', decoded.sub);
 
-                // Check if user has 'ADMIN' role in realm_access
-                const isAdmin = decoded.realm_access?.roles?.includes('ADMIN');
+                // Custom auth roles are prefixed with ROLE_ and in 'roles' claim
+                const isAdmin = decoded.roles?.includes('ROLE_ADMIN');
 
                 if (isAdmin) {
                     navigate('/admin');

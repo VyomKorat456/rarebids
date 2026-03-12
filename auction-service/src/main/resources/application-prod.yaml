@@ -1,0 +1,21 @@
+# --- PRODUCTION PROFILE (AWS RDS & REDIS) ---
+spring:
+  datasource:
+    url: jdbc:postgresql://${RDS_HOSTNAME}:${RDS_PORT:5432}/${RDS_AUCTION_DB:auction_db}
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:eureka-server}
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka/}

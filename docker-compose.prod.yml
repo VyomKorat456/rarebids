@@ -2,28 +2,7 @@ version: '3.8'
 
 services:
   # --- INFRASTRUCTURE ---
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.1.0
-    container_name: keycloak-prod
-    environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://${RDS_HOSTNAME}:${RDS_PORT:-5432}/${RDS_KEYCLOAK_DB:-keycloak_db}
-      KC_DB_USERNAME: ${RDS_USERNAME}
-      KC_DB_PASSWORD: ${RDS_PASSWORD}
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
-      KC_HOSTNAME: 51.21.181.153
-      KC_HOSTNAME_STRICT: "false"
-      KC_HTTP_RELATIVE_PATH: /auth
-      KC_PROXY: edge
-      KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
-    command: start-dev --hostname 51.21.181.153 --proxy-headers xforwarded
-    ports:
-      - "8180:8080"
-    networks:
-      - bid-network
-    restart: always
-
+  # --- INFRASTRUCTURE ---
   redis:
     image: redis:alpine
     container_name: redis-prod
@@ -48,17 +27,13 @@ services:
     container_name: auth-service-prod
     environment:
       JAVA_OPTS: "-Xmx256m"
-      EUREKA_URL: http://eureka-server:8761/eureka/
-      KEYCLOAK_SERVER_URL: http://keycloak:8080/auth
-      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080/auth
-      KEYCLOAK_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/bid-realm/protocol/openid-connect/certs
-      KEYCLOAK_ADMIN_USERNAME: admin
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${RDS_HOSTNAME}:${RDS_PORT:-5432}/${RDS_AUTH_DB:-auth_db}
+      SPRING_DATASOURCE_USERNAME: ${RDS_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${RDS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       - eureka-server
-      - keycloak
     networks:
       - bid-network
     restart: always
@@ -68,22 +43,17 @@ services:
     container_name: auction-service-prod
     environment:
       JAVA_OPTS: "-Xmx384m"
+      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://${RDS_HOSTNAME}:${RDS_PORT:-5432}/${RDS_AUCTION_DB:-auction_db}
       SPRING_DATASOURCE_USERNAME: ${RDS_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${RDS_PASSWORD}
-      EUREKA_URL: http://eureka-server:8761/eureka/
       REDIS_HOST: redis
-      KEYCLOAK_SERVER_URL: http://keycloak:8080/auth
-      KEYCLOAK_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/bid-realm/protocol/openid-connect/certs
-      UPLOAD_DIR: /app/uploads/images
+      JWT_SECRET: ${JWT_SECRET}
     volumes:
       - auction_uploads:/app/uploads/images
     depends_on:
       - redis
       - eureka-server
-      - keycloak
     networks:
       - bid-network
     restart: always
@@ -93,10 +63,7 @@ services:
     container_name: notification-service-prod
     environment:
       JAVA_OPTS: "-Xmx128m"
-      EUREKA_URL: http://eureka-server:8761/eureka/
-      KEYCLOAK_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/bid-realm/protocol/openid-connect/certs
+      SPRING_PROFILES_ACTIVE: prod
     depends_on:
       - eureka-server
     networks:
@@ -109,10 +76,7 @@ services:
       - "8080:8080"
     environment:
       JAVA_OPTS: "-Xmx256m"
-      EUREKA_URL: http://eureka-server:8761/eureka/
-      KEYCLOAK_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/auth/realms/bid-realm
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/auth/realms/bid-realm/protocol/openid-connect/certs
+      SPRING_PROFILES_ACTIVE: prod
     depends_on:
       - eureka-server
     networks:

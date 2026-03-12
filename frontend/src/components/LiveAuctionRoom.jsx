@@ -63,10 +63,11 @@ const LiveAuctionRoom = () => {
         if (!currentUser) return;
         const loadData = async () => {
             try {
-                const [snap, details, catRes] = await Promise.all([
+                const [snap, details, catRes, bidsRes] = await Promise.all([
                     api.get(`/auction-service/auctions/${id}/status`),
                     api.get(`/auction-service/auctions/${id}`),
-                    api.get('/auction-service/categories')
+                    api.get('/auction-service/categories'),
+                    api.get(`/auction-service/bids/auction/${id}`)
                 ]);
                 setAuctionState(snap.data);
                 setStaticDetails(details.data);
@@ -74,6 +75,19 @@ const LiveAuctionRoom = () => {
                 const catMap = {};
                 catRes.data.forEach(c => catMap[c.id] = c.name);
                 setCategories(catMap);
+
+                // Populate activity log with history
+                const history = bidsRes.data.map(b => ({
+                    type: 'bid',
+                    user: b.userName || 'Bidder', // Assuming userName field or we fetch it
+                    amount: b.amount,
+                    time: new Date(b.timestamp)
+                })).reverse(); // Reverse to get chronological order (descending from DB)
+
+                setActivityLog([
+                    { type: 'system', text: `Connected to ${details.data.title}` },
+                    ...history
+                ]);
 
                 // Track if I am anonymous and if I have bid
                 const me = snap.data.participants?.find(p => p.userId === currentUser);
@@ -84,8 +98,6 @@ const LiveAuctionRoom = () => {
                 });
                 setHasBid(eligibilityRes.data);
 
-                setActivityLog([{ type: 'system', text: `Connected to ${details.data.title}` }]);
-
                 // Auto-join the auction room
                 handleJoin();
             } catch (err) {
@@ -95,35 +107,44 @@ const LiveAuctionRoom = () => {
         loadData();
     }, [id, currentUser]);
 
-    // 2. WebSocket
-    useEffect(() => {
-        connectWebSocket(id, (msg) => {
-            console.log("WebSocket Message:", msg);
-            setAuctionState(msg);
+    const onMessageRef = useRef(null);
+    onMessageRef.current = (msg) => {
+        console.log("WebSocket Message:", msg);
+        setAuctionState(msg);
 
-            if (msg.type === 'BID') {
-                setActivityLog(prev => [...prev.slice(-49), {
+        if (msg.type === 'BID') {
+            setActivityLog(prev => {
+                const last = prev[prev.length - 1];
+                const newUser = msg.eventUser || msg.highestBidUser;
+                // Deduplicate identical bids (same user + same amount)
+                if (last?.type === 'bid' && last.user === newUser && last.amount === msg.highestBid) {
+                    return prev;
+                }
+                return [...prev.slice(-49), {
                     type: 'bid',
-                    user: msg.eventUser || msg.highestBidUser,
+                    user: newUser,
                     amount: msg.highestBid,
                     time: new Date()
-                }]);
-            } else if (msg.type === 'START') {
-                setActivityLog(prev => [...prev, { type: 'system', text: 'Auction Started!' }]);
-                setShowStartOverlay(true);
-                setTimeout(() => setShowStartOverlay(false), 3000);
-            } else if (msg.type === 'END') {
-                setActivityLog(prev => [...prev, { type: 'system', text: 'Auction Ended' }]);
-            } else if (msg.type === 'JOIN') {
-                setActivityLog(prev => [...prev.slice(-49), {
-                    type: 'system',
-                    text: `${msg.eventUser || 'A user'} joined the room`,
-                    time: new Date()
-                }]);
-            } else if (msg.type === 'TOGGLE_ANONYMOUS') {
-                // Handled by auctionState update
-            }
-        });
+                }];
+            });
+        } else if (msg.type === 'START') {
+            setActivityLog(prev => [...prev, { type: 'system', text: 'Auction Started!' }]);
+            setShowStartOverlay(true);
+            setTimeout(() => setShowStartOverlay(false), 3000);
+        } else if (msg.type === 'END') {
+            setActivityLog(prev => [...prev, { type: 'system', text: 'Auction Ended' }]);
+        } else if (msg.type === 'JOIN') {
+            setActivityLog(prev => [...prev.slice(-49), {
+                type: 'system',
+                text: `${msg.eventUser || 'A user'} joined the room`,
+                time: new Date()
+            }]);
+        }
+    };
+
+    // 2. WebSocket
+    useEffect(() => {
+        connectWebSocket(id, (msg) => onMessageRef.current(msg));
         return () => disconnectWebSocket();
     }, [id]);
 
@@ -295,7 +316,7 @@ const LiveAuctionRoom = () => {
                                                                 </div>
                                                             ) : (
                                                                 <h4 className="mb-0 fw-bold">
-                                                                    {auctionState.status === 'WAITING_LIVE' || auctionState.status === 'OPEN' ? 'WAITING...' : 'ENDED'}
+                                                                    {auctionState.status === 'OPEN' ? 'WAITING...' : 'ENDED'}
                                                                 </h4>
                                                             )
                                                         )}

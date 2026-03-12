@@ -1,0 +1,22 @@
+# --- LOCAL DEVELOPMENT PROFILE ---
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auction_db
+    username: postgres
+    password: kysz
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+app:
+  upload:
+    dir: ../uploads/images

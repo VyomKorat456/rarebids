@@ -10,16 +10,22 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.beans.factory.annotation.Value;
 
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri:http://localhost:8180/realms/bid-realm/protocol/openid-connect/certs}")
-    private String jwkSetUri;
+    @Value("${application.security.jwt.secret-key:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
+    private String secretKey;
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        SecretKey key = Keys.hmacShaKeyFor(keyBytes);
+        return NimbusJwtDecoder.withSecretKey(key).build();
     }
 
     @Bean

@@ -86,8 +86,7 @@ const PremiumNavbar = (props) => {
                         }}
                     >
                         <Nav className="mx-auto align-items-center gap-3 w-100 w-md-auto text-center">
-                            <NavLink to="/home">Explore</NavLink>
-                            <NavLink to="/home">Categories</NavLink>
+                            <NavLink to="/explore">Explore</NavLink>
                             <NavLink to="/how-it-works">How it Works</NavLink>
                             {token && <NavLink to="/my-bids">My Bids</NavLink>}
                             {token && <NavLink to="/history">History</NavLink>}

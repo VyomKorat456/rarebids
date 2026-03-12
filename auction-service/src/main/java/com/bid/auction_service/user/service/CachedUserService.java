@@ -41,7 +41,13 @@ public class CachedUserService {
 
     private String fetchAndCacheUser(String userId, String cacheKey) {
         try {
-            UserEvent user = authServiceClient.getUserById(userId);
+            UserEvent user;
+            if (isUUID(userId)) {
+                user = authServiceClient.getUserById(userId);
+            } else {
+                user = authServiceClient.getUserByUsername(userId);
+            }
+            
             String fullName = (user.getFirstName() != null ? user.getFirstName() : "") +
                     (user.getLastName() != null ? " " + user.getLastName() : "");
             String finalName = fullName.trim().isEmpty() ? user.getUsername() : fullName.trim();
@@ -56,7 +62,12 @@ public class CachedUserService {
             return finalName;
         } catch (Exception e) {
             System.err.println("Failed to fetch user from auth-service for ID " + userId + ": " + e.getMessage());
-            return "Unknown Seller"; // Graceful fallback
+            return "User: " + (userId.length() > 8 ? userId.substring(0, 8) : userId); // Graceful fallback
         }
+    }
+
+    private boolean isUUID(String str) {
+        if (str == null) return false;
+        return str.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
     }
 }

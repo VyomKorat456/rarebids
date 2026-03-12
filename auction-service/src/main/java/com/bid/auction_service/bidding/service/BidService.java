@@ -25,6 +25,7 @@ public class BidService {
     private final StringRedisTemplate redisTemplate;
     private final AuctionService auctionService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final com.bid.auction_service.user.service.CachedUserService cachedUserService;
 
     // Per-auction locks for thread-safe validation
     private final Map<Long, ReentrantLock> auctionLocks = new ConcurrentHashMap<>();
@@ -32,11 +33,13 @@ public class BidService {
     public BidService(BidRepository bidRepository,
             StringRedisTemplate redisTemplate,
             AuctionService auctionService,
-            SimpMessagingTemplate messagingTemplate) {
+            SimpMessagingTemplate messagingTemplate,
+            com.bid.auction_service.user.service.CachedUserService cachedUserService) {
         this.bidRepository = bidRepository;
         this.redisTemplate = redisTemplate;
         this.auctionService = auctionService;
         this.messagingTemplate = messagingTemplate;
+        this.cachedUserService = cachedUserService;
     }
 
     @Transactional
@@ -83,6 +86,7 @@ public class BidService {
             Bid bid = new Bid();
             bid.setAuctionId(auctionId);
             bid.setUserId(userId);
+            bid.setUserName(cachedUserService.getUserName(userId));
             bid.setAmount(amount);
             bid.setTimestamp(LocalDateTime.now());
 

@@ -33,6 +33,11 @@ public class AdminUserController {
         return ResponseEntity.ok(authService.getUserById(id));
     }
 
+    @GetMapping("/username/{username}")
+    public ResponseEntity<UserResponse> getUserByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(authService.getUserByUsername(username));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<String> updateUser(@PathVariable String id, @RequestBody UserResponse user) {
         authService.updateUser(id, user);

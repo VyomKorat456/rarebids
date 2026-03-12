@@ -14,6 +14,9 @@ import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
 
@@ -21,12 +24,14 @@ import java.util.List;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri:http://localhost:8180/realms/bid-realm/protocol/openid-connect/certs}")
-    private String jwkSetUri;
+    @Value("${application.security.jwt.secret-key:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
+    private String secretKey;
 
     @Bean
     public ReactiveJwtDecoder jwtDecoder() {
-        return NimbusReactiveJwtDecoder.withJwkSetUri(jwkSetUri).build();
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        SecretKey key = Keys.hmacShaKeyFor(keyBytes);
+        return NimbusReactiveJwtDecoder.withSecretKey(key).build();
     }
 
     @Bean

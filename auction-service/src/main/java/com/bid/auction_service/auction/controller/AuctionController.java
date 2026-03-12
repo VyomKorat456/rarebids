@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import com.bid.auction_service.bidding.dto.AuctionLiveUpdateDTO;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +22,7 @@ import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -91,6 +93,36 @@ public class AuctionController {
         // Return OPEN, SOLD, CLOSED (Publicly visible)
         List<Auction> auctions = auctionService.getPublicAuctions();
         auctions.forEach(this::populateSellerName);
+        return ResponseEntity.ok(auctions);
+    }
+
+    @GetMapping("/auctions/paginated")
+    public ResponseEntity<Page<Auction>> getPublicAuctionsPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(defaultValue = "ALL") String statusStr) {
+
+        List<com.bid.auction_service.auction.enums.AuctionStatus> statuses = new ArrayList<>();
+        if ("ALL".equalsIgnoreCase(statusStr)) {
+            statuses = java.util.Arrays.asList(com.bid.auction_service.auction.enums.AuctionStatus.OPEN, 
+                                               com.bid.auction_service.auction.enums.AuctionStatus.WAITING_LIVE,
+                                               com.bid.auction_service.auction.enums.AuctionStatus.LIVE, 
+                                               com.bid.auction_service.auction.enums.AuctionStatus.SOLD, 
+                                               com.bid.auction_service.auction.enums.AuctionStatus.CLOSED);
+        } else if ("OPEN".equalsIgnoreCase(statusStr)) {
+            statuses = java.util.Arrays.asList(com.bid.auction_service.auction.enums.AuctionStatus.OPEN,
+                                               com.bid.auction_service.auction.enums.AuctionStatus.WAITING_LIVE);
+        } else if ("LIVE".equalsIgnoreCase(statusStr)) {
+            statuses = java.util.Arrays.asList(com.bid.auction_service.auction.enums.AuctionStatus.LIVE);
+        } else if ("SOLD".equalsIgnoreCase(statusStr)) {
+            statuses = java.util.Arrays.asList(com.bid.auction_service.auction.enums.AuctionStatus.SOLD);
+        }
+
+        Page<Auction> auctions = auctionService.getPublicAuctionsPaginated(search, categoryId, statuses, page, size);
+        auctions.forEach(this::populateSellerName);
+        
         return ResponseEntity.ok(auctions);
     }
 
@@ -192,8 +224,10 @@ public class AuctionController {
     }
 
     @PostMapping("/auctions/{id}/join")
-    public ResponseEntity<String> joinAuction(@PathVariable Long id, @RequestParam String userId) {
+    public ResponseEntity<String> joinAuction(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
         try {
+            if (jwt == null) return ResponseEntity.status(401).build();
+            String userId = jwt.getSubject();
             auctionService.joinAuction(id, userId, false);
             return ResponseEntity.ok("Joined auction " + id);
         } catch (Exception e) {
@@ -219,11 +253,24 @@ public class AuctionController {
 
     @GetMapping("/images/{filename:.+}")
     public ResponseEntity<Resource> getImage(@PathVariable String filename) throws MalformedURLException {
+        // SECURITY: Prevent path traversal
+        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            return ResponseEntity.badRequest().build();
+        }
+
         // Decode filename just in case it's double encoded
         String decodedFilename = java.net.URLDecoder.decode(filename, java.nio.charset.StandardCharsets.UTF_8);
+        if (decodedFilename.contains("..") || decodedFilename.contains("/") || decodedFilename.contains("\\")) {
+            return ResponseEntity.badRequest().build();
+        }
 
         Path path = Paths.get(uploadDir).toAbsolutePath().normalize().resolve(decodedFilename);
         System.out.println(">>> Requested: " + filename + " | Resolved to: " + path.toString());
+
+        // SECURITY: Ensure the resolved path is still within the upload directory
+        if (!path.startsWith(Paths.get(uploadDir).toAbsolutePath().normalize())) {
+            return ResponseEntity.status(403).build();
+        }
 
         if (!java.nio.file.Files.exists(path)) {
             System.err.println(">>> FILE NOT FOUND at: " + path.toString());

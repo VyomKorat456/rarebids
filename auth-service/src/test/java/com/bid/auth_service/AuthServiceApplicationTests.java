@@ -2,6 +2,7 @@ package com.bid.auth_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
@@ -10,6 +11,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 		"spring.cloud.discovery.enabled=false",
 		"spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8080/realms/rarebids"
 })
+@ActiveProfiles("test")
 class AuthServiceApplicationTests {
 
 	@MockitoBean

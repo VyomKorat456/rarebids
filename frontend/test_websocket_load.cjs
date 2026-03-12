@@ -4,10 +4,6 @@ const axios = require('axios');
 const AUCTION_ID = 4;
 const GATEWAY_URL = 'http://localhost:8080';
 
-// Note: Keycloak token endpoint usually runs on 8180 direct or via gateway if configured. 
-// Login.jsx uses 8180 direct.
-const KEYCLOAK_URL = 'http://localhost:8180/realms/bid-realm/protocol/openid-connect/token';
-
 // Test Creds
 const CLIENT_USER = 'load_test_client';
 const CLIENT_PASS = 'password123';
@@ -45,14 +41,9 @@ async function startSimulation() {
     // 2. Login
     try {
         console.log(`[Auth] Logging in...`);
-        const params = new URLSearchParams();
-        params.append('grant_type', 'password');
-        params.append('client_id', 'bid-app-client');
-        params.append('username', CLIENT_USER);
-        params.append('password', CLIENT_PASS);
-
-        const res = await axios.post(KEYCLOAK_URL, params, {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        const res = await axios.post(`${GATEWAY_URL}/auth-service/auth/login`, {
+            username: CLIENT_USER,
+            password: CLIENT_PASS
         });
         token = res.data.access_token;
         console.log('[Auth] Token obtained.');

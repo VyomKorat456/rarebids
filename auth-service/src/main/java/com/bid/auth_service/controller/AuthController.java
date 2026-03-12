@@ -45,8 +45,7 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(Map.of(
                 "id", jwt.getSubject(),
-                "username", jwt.getClaimAsString("preferred_username"),
-                "email", jwt.getClaimAsString("email"),
-                "roles", jwt.getClaimAsMap("realm_access").get("roles")));
+                "username", jwt.getSubject(), // subject is username in our custom auth
+                "roles", jwt.getClaimAsStringList("roles")));
     }
 }

@@ -23,22 +23,23 @@ public class PaymentController {
 
     // Create Order
     @PostMapping("/create-order")
-    public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> data) {
+    public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> data,
+                                         @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt) {
         try {
             System.out.println("DEBUG: Received payment request: " + data);
             Long auctionId = Long.parseLong(data.get("auctionId").toString());
-            String userId = data.get("userId").toString(); // Get from data as String
+            
+            // SECURITY: Get userId from JWT subject instead of request body data
+            String userId = jwt.getSubject(); 
             Double amount = Double.parseDouble(data.get("amount").toString());
 
             Payment payment = paymentService.createOrder(auctionId, userId, amount);
             return ResponseEntity.ok(payment);
         } catch (RazorpayException e) {
             System.err.println("RAZORPAY EXCEPTION: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.badRequest().body("Error creating order: " + e.getMessage());
         } catch (Exception e) {
             System.err.println("GENERAL EXCEPTION: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
         }
     }
@@ -60,6 +61,7 @@ public class PaymentController {
 
     // Get All Payments (Admin)
     @GetMapping("/all")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Payment>> getAllPayments() {
         return ResponseEntity.ok(paymentService.getAllPayments());
     }

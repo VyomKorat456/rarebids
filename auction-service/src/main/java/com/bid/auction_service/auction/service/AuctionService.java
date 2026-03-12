@@ -8,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -95,6 +98,27 @@ public class AuctionService {
                         AuctionStatus.LIVE, AuctionStatus.SOLD, AuctionStatus.CLOSED));
     }
 
+    public Page<Auction> getPublicAuctionsPaginated(String search, Long categoryId, List<AuctionStatus> statuses, int page, int size) {
+        // Sort by Status (Ascending enum ordinal) then CreatedAt (Descending)
+        // This puts OPEN/LIVE auctions before SOLD/CLOSED
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(page, size, 
+            org.springframework.data.domain.Sort.by(
+                org.springframework.data.domain.Sort.Order.asc("status"),
+                org.springframework.data.domain.Sort.Order.desc("createdAt")
+            )
+        );
+        if (search != null && !search.trim().isEmpty()) {
+            if (categoryId != null) {
+                return auctionRepository.findByTitleContainingIgnoreCaseAndCategoryIdAndStatusIn(search.trim(), categoryId, statuses, pageable);
+            }
+            return auctionRepository.findByTitleContainingIgnoreCaseAndStatusIn(search.trim(), statuses, pageable);
+        }
+        if (categoryId != null) {
+            return auctionRepository.findByCategoryIdAndStatusIn(categoryId, statuses, pageable);
+        }
+        return auctionRepository.findByStatusIn(statuses, pageable);
+    }
+
     public Auction getAuctionById(Long id) {
         return auctionRepository.findById(id).orElseThrow(() -> new RuntimeException("Auction not found"));
     }
@@ -161,15 +185,22 @@ public class AuctionService {
 
     public void startLiveAuction(Long id) {
         Auction auction = getAuctionById(id);
-        if (auction.getStatus() != AuctionStatus.WAITING_LIVE && auction.getStatus() != AuctionStatus.OPEN) {
-            throw new IllegalStateException("Auction can only be started LIVE if it is OPEN or WAITING_LIVE.");
+        if (auction.getStatus() != AuctionStatus.OPEN) {
+            throw new IllegalStateException("Auction can only be started LIVE if it is OPEN.");
         }
+
+        forceStartLiveAuction(id);
+    }
+
+    private void forceStartLiveAuction(Long id) {
+        Auction auction = getAuctionById(id);
+        if (auction.getStatus() == AuctionStatus.LIVE) return;
 
         auction.setStatus(AuctionStatus.LIVE);
         auctionRepository.save(auction);
         log.info("Auction ID {} starting LIVE.", auction.getId());
 
-        // Initialize Redis State
+        // Initialize Redis State for LIVE bidding
         LocalDateTime endTime = LocalDateTime.now().plusSeconds(30);
         redisTemplate.opsForValue().set("auction:" + id + ":highestBid", String
                 .valueOf(auction.getCurrentPrice() != null ? auction.getCurrentPrice() : auction.getStartPrice()));
@@ -401,6 +432,21 @@ public class AuctionService {
                 log.info("Auction {} unpaid for 30 minutes. Marking as UNSOLD.", auction.getId());
                 auction.setStatus(AuctionStatus.UNSOLD);
                 auction.setWinnerId(null);
+                auctionRepository.save(auction);
+                broadcastAuctionStatus(auction.getId(), "END");
+            }
+        }
+    }
+
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 60000) // Every minute
+    public void closeExpiredAuctions() {
+        List<Auction> activeAuctions = auctionRepository.findByStatusIn(java.util.Arrays.asList(AuctionStatus.OPEN, AuctionStatus.WAITING_LIVE));
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Auction auction : activeAuctions) {
+            if (auction.getEndTime() != null && auction.getEndTime().isBefore(now)) {
+                log.info("Auction {} end time has passed. Marking as CLOSED.", auction.getId());
+                auction.setStatus(AuctionStatus.CLOSED);
                 auctionRepository.save(auction);
                 broadcastAuctionStatus(auction.getId(), "END");
             }

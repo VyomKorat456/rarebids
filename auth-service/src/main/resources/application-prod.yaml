@@ -1,0 +1,22 @@
+# --- PRODUCTION PROFILE (AWS RDS) ---
+spring:
+  datasource:
+    url: jdbc:postgresql://${RDS_HOSTNAME}:${RDS_PORT:5432}/${RDS_AUTH_DB:auth_db}
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate # Stricter in production
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET}
+
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:eureka-server}
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka/}

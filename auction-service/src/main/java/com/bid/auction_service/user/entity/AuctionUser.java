@@ -8,7 +8,8 @@ import jakarta.persistence.Table;
 @Table(name = "auction_users")
 public class AuctionUser {
 
-    public AuctionUser() {}
+    public AuctionUser() {
+    }
 
     public AuctionUser(String id, String username, String firstName, String lastName, String email) {
         this.id = id;
@@ -19,7 +20,7 @@ public class AuctionUser {
     }
 
     @Id
-    private String id; // Keycloak User ID (UUID string)
+    private String id; // User ID (from auth-service)
 
     private String username;
     private String firstName;

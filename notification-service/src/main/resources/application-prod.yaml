@@ -1,0 +1,7 @@
+# --- PRODUCTION PROFILE (AWS) ---
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:eureka-server}
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka/}

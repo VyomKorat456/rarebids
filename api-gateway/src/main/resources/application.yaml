@@ -44,12 +44,8 @@ spring:
               filters:
                 - StripPrefix=1
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/bid-realm}
-          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/bid-realm/protocol/openid-connect/certs}
+  profiles:
+    active: dev
 
 eureka:
   client:

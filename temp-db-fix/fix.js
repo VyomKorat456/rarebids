@@ -1,0 +1,1 @@
+const { Client } = require('pg'); const client = new Client({ user: 'postgres', host: 'localhost', database: 'auth_db', password: 'kysz', port: 5432 }); client.connect(); client.query('ALTER TABLE users ADD COLUMN username VARCHAR(255) UNIQUE', (err, res) => { console.log(err ? err.stack : 'Column added successfully'); client.end(); });

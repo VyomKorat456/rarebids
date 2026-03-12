@@ -1,24 +1,7 @@
 version: '3.8'
 
 services:
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.1.0
-    container_name: keycloak
-    environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://host.docker.internal:5432/keycloak
-      KC_DB_USERNAME: postgres
-      KC_DB_PASSWORD: kysz
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    command: start-dev
-    ports:
-      - "8180:8080"
-    networks:
-      - bid-network
-    restart: unless-stopped
+
 
   adminer:
     image: adminer

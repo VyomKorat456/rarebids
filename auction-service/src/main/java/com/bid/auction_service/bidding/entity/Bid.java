@@ -31,6 +31,7 @@ public class Bid {
 
     private Long auctionId;
     private String userId;
+    private String userName;
     private Double amount;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")

@@ -21,74 +21,59 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri:http://localhost:8180/realms/bid-realm/protocol/openid-connect/certs}")
-    private String jwkSetUri;
+    @Value("${application.security.jwt.secret-key:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
+    private String secretKey;
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withJwkSetUri(jwkSetUri)
-                .build();
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        SecretKey key = Keys.hmacShaKeyFor(keyBytes);
+        return NimbusJwtDecoder.withSecretKey(key).build();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())// Handled by API Gateway
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/auctions/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/categories/**").permitAll()
                         .requestMatchers("/images/**").permitAll()
-                        .requestMatchers("/debug/**").permitAll()
+                        .requestMatchers("/debug/**").hasRole("ADMIN")
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                        .bearerTokenResolver(bearerTokenResolver()));
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
         return http.build();
-    }
-
-    @Bean
-    public org.springframework.security.oauth2.server.resource.web.BearerTokenResolver bearerTokenResolver() {
-        org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver resolver = new org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver();
-        resolver.setAllowFormEncodedBodyParameter(true);
-        resolver.setAllowUriQueryParameter(true); // Allow sending token in query param "access_token"
-        return resolver;
     }
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
+        converter.setJwtGrantedAuthoritiesConverter(new CustomRoleConverter());
         return converter;
     }
 
-    static class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
+    static class CustomRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
         @Override
         public Collection<GrantedAuthority> convert(Jwt jwt) {
-            Map<String, Object> realmAccess = (Map<String, Object>) jwt.getClaims().get("realm_access");
-            System.out.println("DEBUG: JWT Claims: " + jwt.getClaims());
-            System.out.println("DEBUG: realm_access: " + realmAccess);
-
-            if (realmAccess == null || realmAccess.isEmpty()) {
+            List<String> roles = (List<String>) jwt.getClaims().get("roles");
+            if (roles == null || roles.isEmpty()) {
                 return List.of();
             }
-
-            Collection<String> roles = (Collection<String>) realmAccess.get("roles");
-            System.out.println("DEBUG: Keycloak Roles: " + roles);
-
-            if (roles == null) {
-                return List.of();
-            }
-
             return roles.stream()
-                    .map(roleName -> new SimpleGrantedAuthority("ROLE_" + roleName.toUpperCase()))
+                    .map(role -> new SimpleGrantedAuthority(role))
                     .collect(Collectors.toList());
         }
     }
